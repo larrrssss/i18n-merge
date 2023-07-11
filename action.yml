@@ -21,6 +21,9 @@ inputs:
   workspace:
     required: true
     description: 'Github $GITHUB_WORKSPACE variable'
+outputs:
+  changes_detected:
+    description: 'Wheter there are new changes'
 runs:
   using: 'node16'
   main: 'dist/index.js'
