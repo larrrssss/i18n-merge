@@ -12,13 +12,7 @@ import {
 
 (async () => {
   try {
-    const {
-      LOCALES_FILE_PATH,
-      LOCALES_FILE_NAME,
-      OUTPUT_FILE_NAME,
-      OUTPUT_FILE_PATH,
-      ROOT,
-    } = loadInputs();
+    const { LOCALES_FILE_PATH, OUTPUT_FILE_PATH, ROOT } = loadInputs();
     const workspace = path.join(
       // Path from actions/checkout@v3
       core.getInput('workspace', {
@@ -30,9 +24,7 @@ import {
 
     // Read in locales array
     const locales: string[] = JSON.parse(
-      await readPathOrThrow(
-        path.join(workspace, LOCALES_FILE_PATH, LOCALES_FILE_NAME),
-      ),
+      await readPathOrThrow(path.join(workspace, LOCALES_FILE_PATH)),
     );
 
     // Validate locales array
@@ -40,7 +32,7 @@ import {
       !Array.isArray(locales) ||
       locales.filter((l) => typeof l !== 'string').length
     )
-      throw new Error(`${LOCALES_FILE_NAME} should be an array of strings`);
+      throw new Error(`${LOCALES_FILE_PATH} should be an array of strings`);
 
     for (const locale of locales) {
       console.log(`Merging ${locale}`);
@@ -58,7 +50,7 @@ import {
         changesDetected = true;
 
       await fs.promises.writeFile(
-        path.join(workspace, locale, OUTPUT_FILE_PATH, OUTPUT_FILE_NAME),
+        path.join(workspace, locale, OUTPUT_FILE_PATH),
         JSON.stringify(output, null, 2),
       );
     }

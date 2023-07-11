@@ -33,15 +33,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(186));
 const inputs = {
     ROOT: '/',
-    OUTPUT_FILE_NAME: 'output.json',
-    // Relative based on a locale folder
-    OUTPUT_FILE_PATH: '/',
-    LOCALES_FILE_NAME: 'locales.json',
-    LOCALES_FILE_PATH: '/',
+    OUTPUT_FILE_PATH: 'output.json',
+    LOCALES_FILE_PATH: 'locales.json',
     BASE_FILE_NAME: 'base.json',
 };
 const loadInputs = () => Object.keys(inputs).reduce((p, c) => Object.assign(p, {
-    [c]: core.getInput(c) || inputs[c],
+    [c]: core.getInput(c.toLowerCase()) || inputs[c],
 }), {});
 exports["default"] = loadInputs;
 
@@ -96,7 +93,7 @@ const inputs_1 = __importDefault(__nccwpck_require__(180));
 const utils_1 = __nccwpck_require__(918);
 (() => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { LOCALES_FILE_PATH, LOCALES_FILE_NAME, OUTPUT_FILE_NAME, OUTPUT_FILE_PATH, ROOT, } = (0, inputs_1.default)();
+        const { LOCALES_FILE_PATH, OUTPUT_FILE_PATH, ROOT } = (0, inputs_1.default)();
         const workspace = path_1.default.join(
         // Path from actions/checkout@v3
         core.getInput('workspace', {
@@ -104,11 +101,11 @@ const utils_1 = __nccwpck_require__(918);
         }), ROOT);
         let changesDetected = false;
         // Read in locales array
-        const locales = JSON.parse(yield (0, utils_1.readPathOrThrow)(path_1.default.join(workspace, LOCALES_FILE_PATH, LOCALES_FILE_NAME)));
+        const locales = JSON.parse(yield (0, utils_1.readPathOrThrow)(path_1.default.join(workspace, LOCALES_FILE_PATH)));
         // Validate locales array
         if (!Array.isArray(locales) ||
             locales.filter((l) => typeof l !== 'string').length)
-            throw new Error(`${LOCALES_FILE_NAME} should be an array of strings`);
+            throw new Error(`${LOCALES_FILE_PATH} should be an array of strings`);
         for (const locale of locales) {
             console.log(`Merging ${locale}`);
             const paths = yield (0, utils_1.getPathsRecursively)(path_1.default.join(workspace, locale));
@@ -117,7 +114,7 @@ const utils_1 = __nccwpck_require__(918);
             // Check if there is a diff between the old output file and the new one
             if (!lastOutput || JSON.stringify(lastOutput) !== JSON.stringify(output))
                 changesDetected = true;
-            yield fs_1.default.promises.writeFile(path_1.default.join(workspace, locale, OUTPUT_FILE_PATH, OUTPUT_FILE_NAME), JSON.stringify(output, null, 2));
+            yield fs_1.default.promises.writeFile(path_1.default.join(workspace, locale, OUTPUT_FILE_PATH), JSON.stringify(output, null, 2));
         }
         core.setOutput('changes_detected', changesDetected ? '1' : '0');
     }
@@ -167,11 +164,11 @@ const readPathOrThrow = (p) => __awaiter(void 0, void 0, void 0, function* () {
 exports.readPathOrThrow = readPathOrThrow;
 const getPathsRecursively = (p, root = true) => __awaiter(void 0, void 0, void 0, function* () {
     const paths = [];
-    const { OUTPUT_FILE_NAME } = (0, inputs_1.default)();
+    const { OUTPUT_FILE_PATH } = (0, inputs_1.default)();
     try {
         const result = yield fs_1.default.promises.readdir(p);
         for (const f of result) {
-            if (root && f === OUTPUT_FILE_NAME)
+            if (root && f === OUTPUT_FILE_PATH.split('/').pop())
                 continue;
             if (['json'].includes((0, exports.removeExtension)(f))) {
                 console.log(`Found file ${f}`);
@@ -213,8 +210,8 @@ const reduceFilesToObject = (paths, root) => __awaiter(void 0, void 0, void 0, f
 });
 exports.reduceFilesToObject = reduceFilesToObject;
 const loadOutputFile = (basePath) => __awaiter(void 0, void 0, void 0, function* () {
-    const { OUTPUT_FILE_NAME, OUTPUT_FILE_PATH } = (0, inputs_1.default)();
-    const p = path_1.default.join(basePath, OUTPUT_FILE_PATH, OUTPUT_FILE_NAME);
+    const { OUTPUT_FILE_PATH } = (0, inputs_1.default)();
+    const p = path_1.default.join(basePath, OUTPUT_FILE_PATH);
     const content = yield (0, exports.readPathOrThrow)(p).catch(() => null);
     return !!content ? JSON.parse(content).catch(() => null) : null;
 });

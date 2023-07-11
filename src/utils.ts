@@ -22,13 +22,13 @@ export const getPathsRecursively = async (
   root = true,
 ): Promise<string[]> => {
   const paths = [];
-  const { OUTPUT_FILE_NAME } = loadInputs();
+  const { OUTPUT_FILE_PATH } = loadInputs();
 
   try {
     const result = await fs.promises.readdir(p);
 
     for (const f of result) {
-      if (root && f === OUTPUT_FILE_NAME) continue;
+      if (root && f === OUTPUT_FILE_PATH.split('/').pop()) continue;
 
       if (['json'].includes(removeExtension(f))) {
         console.log(`Found file ${f}`);
@@ -76,8 +76,8 @@ export const reduceFilesToObject = async (paths: string[], root: string) => {
 };
 
 export const loadOutputFile = async (basePath: string): Promise<{} | null> => {
-  const { OUTPUT_FILE_NAME, OUTPUT_FILE_PATH } = loadInputs();
-  const p = path.join(basePath, OUTPUT_FILE_PATH, OUTPUT_FILE_NAME);
+  const { OUTPUT_FILE_PATH } = loadInputs();
+  const p = path.join(basePath, OUTPUT_FILE_PATH);
   const content = await readPathOrThrow(p).catch(() => null);
 
   return !!content ? JSON.parse(content).catch(() => null) : null;

@@ -2,10 +2,25 @@ name: 'I18n Merge'
 description: 'Merge i18n translation files into one output file'
 author: 'larrrssss'
 inputs:
-  milliseconds: # change this
+  root:
+    required: false
+    description: 'Change the root path for all paths'
+    default: '/'
+  output_file_path:
+    required: false
+    description: 'Path for the output file'
+    default: 'output.json'
+  locales_file_path:
+    required: false
+    description: 'Path for the root locales file'
+    default: 'locales.json'
+  base_file_name:
+    required: false
+    description: 'Name of the base file'
+    default: 'base.json'
+  workspace:
     required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+    description: 'Github $GITHUB_WORKSPACE variable'
 runs:
   using: 'node16'
   main: 'dist/index.js'
