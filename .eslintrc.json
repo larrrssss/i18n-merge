@@ -28,10 +28,13 @@
     "camelcase": 0,
     "import/extensions": 0,
     "@typescript-eslint/no-redeclare": 0,
-    "i18n-text/no-en": "off",
-    "eslint-comments/no-use": "off",
-    "import/no-namespace": "off",
-    "no-unused-vars": "off"
+    "i18n-text/no-en": 0,
+    "eslint-comments/no-use": 0,
+    "import/no-namespace": 0,
+    "no-unused-vars": 0,
+    "no-console": 0,
+    "github/no-then": 0,
+    "no-extra-boolean-cast": 0
   },
   "settings": {
     "import/parsers": {

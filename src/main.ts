@@ -1,20 +1,70 @@
 import * as core from '@actions/core';
+import path from 'path';
+import fs from 'fs';
 
-import { wait } from './wait';
+import loadInputs from './inputs';
+import {
+  getPathsRecursively,
+  loadOutputFile,
+  readPathOrThrow,
+  reduceFilesToObject,
+} from './utils';
 
-async function run(): Promise<void> {
+(async () => {
   try {
-    const ms: string = core.getInput('milliseconds');
-    core.debug(`Waiting ${ms} milliseconds ...`); // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true
+    const {
+      LOCALES_FILE_PATH,
+      LOCALES_FILE_NAME,
+      OUTPUT_FILE_NAME,
+      OUTPUT_FILE_PATH,
+      ROOT,
+    } = loadInputs();
+    const workspace = path.join(
+      // Path from actions/checkout@v3
+      core.getInput('workspace', {
+        required: true,
+      }),
+      ROOT,
+    );
+    let changesDetected = false;
 
-    core.debug(new Date().toTimeString());
-    await wait(parseInt(ms, 10));
-    core.debug(new Date().toTimeString());
+    // Read in locales array
+    const locales: string[] = JSON.parse(
+      await readPathOrThrow(
+        path.join(workspace, LOCALES_FILE_PATH, LOCALES_FILE_NAME),
+      ),
+    );
 
-    core.setOutput('time', new Date().toTimeString());
+    // Validate locales array
+    if (
+      !Array.isArray(locales) ||
+      locales.filter((l) => typeof l !== 'string').length
+    )
+      throw new Error(`${LOCALES_FILE_NAME} should be an array of strings`);
+
+    for (const locale of locales) {
+      console.log(`Merging ${locale}`);
+
+      const paths = await getPathsRecursively(path.join(workspace, locale));
+      const output = await reduceFilesToObject(
+        paths,
+        path.join(workspace, locale),
+      );
+
+      const lastOutput = loadOutputFile(path.join(workspace, locale));
+
+      // Check if there is a diff between the old output file and the new one
+      if (!lastOutput || JSON.stringify(lastOutput) !== JSON.stringify(output))
+        changesDetected = true;
+
+      await fs.promises.writeFile(
+        path.join(workspace, locale, OUTPUT_FILE_PATH, OUTPUT_FILE_NAME),
+        JSON.stringify(output, null, 2),
+      );
+    }
+
+    core.setOutput('changes_detected', changesDetected ? '1' : '0');
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message);
   }
-}
-
-run();
+})();

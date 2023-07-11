@@ -1,6 +1,53 @@
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 180:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core = __importStar(__nccwpck_require__(186));
+const inputs = {
+    ROOT: '/',
+    OUTPUT_FILE_NAME: 'output.json',
+    // Relative based on a locale folder
+    OUTPUT_FILE_PATH: '/',
+    LOCALES_FILE_NAME: 'locales.json',
+    LOCALES_FILE_PATH: '/',
+    BASE_FILE_NAME: 'base.json',
+};
+const loadInputs = () => Object.keys(inputs).reduce((p, c) => Object.assign(p, {
+    [c]: core.getInput(c) || inputs[c],
+}), {});
+exports["default"] = loadInputs;
+
+
+/***/ }),
+
 /***/ 109:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -38,32 +85,53 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(186));
-const wait_1 = __nccwpck_require__(817);
-function run() {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const ms = core.getInput('milliseconds');
-            core.debug(`Waiting ${ms} milliseconds ...`); // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true
-            core.debug(new Date().toTimeString());
-            yield (0, wait_1.wait)(parseInt(ms, 10));
-            core.debug(new Date().toTimeString());
-            core.setOutput('time', new Date().toTimeString());
+const path_1 = __importDefault(__nccwpck_require__(17));
+const fs_1 = __importDefault(__nccwpck_require__(147));
+const inputs_1 = __importDefault(__nccwpck_require__(180));
+const utils_1 = __nccwpck_require__(918);
+(() => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { LOCALES_FILE_PATH, LOCALES_FILE_NAME, OUTPUT_FILE_NAME, OUTPUT_FILE_PATH, ROOT, } = (0, inputs_1.default)();
+        const workspace = path_1.default.join(
+        // Path from actions/checkout@v3
+        core.getInput('workspace', {
+            required: true,
+        }), ROOT);
+        let changesDetected = false;
+        // Read in locales array
+        const locales = JSON.parse(yield (0, utils_1.readPathOrThrow)(path_1.default.join(workspace, LOCALES_FILE_PATH, LOCALES_FILE_NAME)));
+        // Validate locales array
+        if (!Array.isArray(locales) ||
+            locales.filter((l) => typeof l !== 'string').length)
+            throw new Error(`${LOCALES_FILE_NAME} should be an array of strings`);
+        for (const locale of locales) {
+            console.log(`Merging ${locale}`);
+            const paths = yield (0, utils_1.getPathsRecursively)(path_1.default.join(workspace, locale));
+            const output = yield (0, utils_1.reduceFilesToObject)(paths, path_1.default.join(workspace, locale));
+            const lastOutput = (0, utils_1.loadOutputFile)(path_1.default.join(workspace, locale));
+            // Check if there is a diff between the old output file and the new one
+            if (!lastOutput || JSON.stringify(lastOutput) !== JSON.stringify(output))
+                changesDetected = true;
+            yield fs_1.default.promises.writeFile(path_1.default.join(workspace, locale, OUTPUT_FILE_PATH, OUTPUT_FILE_NAME), JSON.stringify(output, null, 2));
         }
-        catch (error) {
-            if (error instanceof Error)
-                core.setFailed(error.message);
-        }
-    });
-}
-run();
+        core.setOutput('changes_detected', changesDetected ? '1' : '0');
+    }
+    catch (error) {
+        if (error instanceof Error)
+            core.setFailed(error.message);
+    }
+}))();
 
 
 /***/ }),
 
-/***/ 817:
-/***/ (function(__unused_webpack_module, exports) {
+/***/ 918:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
@@ -76,19 +144,81 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.wait = void 0;
-function wait(milliseconds) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return new Promise((resolve) => {
-            if (isNaN(milliseconds)) {
-                throw new Error('milliseconds not a number');
+exports.loadOutputFile = exports.reduceFilesToObject = exports.getPathsRecursively = exports.readPathOrThrow = exports.removeExtension = void 0;
+const fs_1 = __importDefault(__nccwpck_require__(147));
+const path_1 = __importDefault(__nccwpck_require__(17));
+const deepmerge_1 = __importDefault(__nccwpck_require__(323));
+const inputs_1 = __importDefault(__nccwpck_require__(180));
+const removeExtension = (n) => n.split('.').slice(0, -1).join('.');
+exports.removeExtension = removeExtension;
+const readPathOrThrow = (p) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const content = yield fs_1.default.promises.readFile(p);
+        return content.toString();
+    }
+    catch (e) {
+        throw new Error(`${p} does not exist`);
+    }
+});
+exports.readPathOrThrow = readPathOrThrow;
+const getPathsRecursively = (p, root = true) => __awaiter(void 0, void 0, void 0, function* () {
+    const paths = [];
+    const { OUTPUT_FILE_NAME } = (0, inputs_1.default)();
+    try {
+        const result = yield fs_1.default.promises.readdir(p);
+        for (const f of result) {
+            if (root && f === OUTPUT_FILE_NAME)
+                continue;
+            if (['json'].includes((0, exports.removeExtension)(f))) {
+                console.log(`Found file ${f}`);
+                paths.push(path_1.default.join(p, f));
             }
-            setTimeout(() => resolve('done!'), milliseconds);
-        });
-    });
-}
-exports.wait = wait;
+            else {
+                paths.push(...(yield (0, exports.getPathsRecursively)(path_1.default.join(p, f), false)));
+            }
+        }
+        return paths;
+    }
+    catch (e) {
+        return [];
+    }
+});
+exports.getPathsRecursively = getPathsRecursively;
+const reduceFilesToObject = (paths, root) => __awaiter(void 0, void 0, void 0, function* () {
+    let output = {};
+    const { BASE_FILE_NAME } = (0, inputs_1.default)();
+    for (const filePath of paths) {
+        const tree = filePath
+            .split(root)[1]
+            .split('/')
+            .filter((s) => s.length)
+            .map(exports.removeExtension);
+        const content = JSON.parse(yield (0, exports.readPathOrThrow)(filePath));
+        if (!tree.length)
+            continue;
+        if (tree.length === 1 && tree[0] === (0, exports.removeExtension)(BASE_FILE_NAME)) {
+            output = (0, deepmerge_1.default)(output, content);
+            continue;
+        }
+        output = (0, deepmerge_1.default)(output, tree
+            .slice(0, -1)
+            .reverse()
+            .reduce((p, c) => ({ [c]: p }), { [tree[tree.length - 1]]: content }));
+    }
+    return output;
+});
+exports.reduceFilesToObject = reduceFilesToObject;
+const loadOutputFile = (basePath) => __awaiter(void 0, void 0, void 0, function* () {
+    const { OUTPUT_FILE_NAME, OUTPUT_FILE_PATH } = (0, inputs_1.default)();
+    const p = path_1.default.join(basePath, OUTPUT_FILE_PATH, OUTPUT_FILE_NAME);
+    const content = yield (0, exports.readPathOrThrow)(p).catch(() => null);
+    return !!content ? JSON.parse(content).catch(() => null) : null;
+});
+exports.loadOutputFile = loadOutputFile;
 
 
 /***/ }),
@@ -1818,6 +1948,10 @@ function checkBypass(reqUrl) {
     if (!reqUrl.hostname) {
         return false;
     }
+    const reqHost = reqUrl.hostname;
+    if (isLoopbackAddress(reqHost)) {
+        return true;
+    }
     const noProxy = process.env['no_proxy'] || process.env['NO_PROXY'] || '';
     if (!noProxy) {
         return false;
@@ -1843,14 +1977,166 @@ function checkBypass(reqUrl) {
         .split(',')
         .map(x => x.trim().toUpperCase())
         .filter(x => x)) {
-        if (upperReqHosts.some(x => x === upperNoProxyItem)) {
+        if (upperNoProxyItem === '*' ||
+            upperReqHosts.some(x => x === upperNoProxyItem ||
+                x.endsWith(`.${upperNoProxyItem}`) ||
+                (upperNoProxyItem.startsWith('.') &&
+                    x.endsWith(`${upperNoProxyItem}`)))) {
             return true;
         }
     }
     return false;
 }
 exports.checkBypass = checkBypass;
+function isLoopbackAddress(host) {
+    const hostLower = host.toLowerCase();
+    return (hostLower === 'localhost' ||
+        hostLower.startsWith('127.') ||
+        hostLower.startsWith('[::1]') ||
+        hostLower.startsWith('[0:0:0:0:0:0:0:1]'));
+}
 //# sourceMappingURL=proxy.js.map
+
+/***/ }),
+
+/***/ 323:
+/***/ ((module) => {
+
+"use strict";
+
+
+var isMergeableObject = function isMergeableObject(value) {
+	return isNonNullObject(value)
+		&& !isSpecial(value)
+};
+
+function isNonNullObject(value) {
+	return !!value && typeof value === 'object'
+}
+
+function isSpecial(value) {
+	var stringValue = Object.prototype.toString.call(value);
+
+	return stringValue === '[object RegExp]'
+		|| stringValue === '[object Date]'
+		|| isReactElement(value)
+}
+
+// see https://github.com/facebook/react/blob/b5ac963fb791d1298e7f396236383bc955f916c1/src/isomorphic/classic/element/ReactElement.js#L21-L25
+var canUseSymbol = typeof Symbol === 'function' && Symbol.for;
+var REACT_ELEMENT_TYPE = canUseSymbol ? Symbol.for('react.element') : 0xeac7;
+
+function isReactElement(value) {
+	return value.$$typeof === REACT_ELEMENT_TYPE
+}
+
+function emptyTarget(val) {
+	return Array.isArray(val) ? [] : {}
+}
+
+function cloneUnlessOtherwiseSpecified(value, options) {
+	return (options.clone !== false && options.isMergeableObject(value))
+		? deepmerge(emptyTarget(value), value, options)
+		: value
+}
+
+function defaultArrayMerge(target, source, options) {
+	return target.concat(source).map(function(element) {
+		return cloneUnlessOtherwiseSpecified(element, options)
+	})
+}
+
+function getMergeFunction(key, options) {
+	if (!options.customMerge) {
+		return deepmerge
+	}
+	var customMerge = options.customMerge(key);
+	return typeof customMerge === 'function' ? customMerge : deepmerge
+}
+
+function getEnumerableOwnPropertySymbols(target) {
+	return Object.getOwnPropertySymbols
+		? Object.getOwnPropertySymbols(target).filter(function(symbol) {
+			return Object.propertyIsEnumerable.call(target, symbol)
+		})
+		: []
+}
+
+function getKeys(target) {
+	return Object.keys(target).concat(getEnumerableOwnPropertySymbols(target))
+}
+
+function propertyIsOnObject(object, property) {
+	try {
+		return property in object
+	} catch(_) {
+		return false
+	}
+}
+
+// Protects from prototype poisoning and unexpected merging up the prototype chain.
+function propertyIsUnsafe(target, key) {
+	return propertyIsOnObject(target, key) // Properties are safe to merge if they don't exist in the target yet,
+		&& !(Object.hasOwnProperty.call(target, key) // unsafe if they exist up the prototype chain,
+			&& Object.propertyIsEnumerable.call(target, key)) // and also unsafe if they're nonenumerable.
+}
+
+function mergeObject(target, source, options) {
+	var destination = {};
+	if (options.isMergeableObject(target)) {
+		getKeys(target).forEach(function(key) {
+			destination[key] = cloneUnlessOtherwiseSpecified(target[key], options);
+		});
+	}
+	getKeys(source).forEach(function(key) {
+		if (propertyIsUnsafe(target, key)) {
+			return
+		}
+
+		if (propertyIsOnObject(target, key) && options.isMergeableObject(source[key])) {
+			destination[key] = getMergeFunction(key, options)(target[key], source[key], options);
+		} else {
+			destination[key] = cloneUnlessOtherwiseSpecified(source[key], options);
+		}
+	});
+	return destination
+}
+
+function deepmerge(target, source, options) {
+	options = options || {};
+	options.arrayMerge = options.arrayMerge || defaultArrayMerge;
+	options.isMergeableObject = options.isMergeableObject || isMergeableObject;
+	// cloneUnlessOtherwiseSpecified is added to `options` so that custom arrayMerge()
+	// implementations can use it. The caller may not replace it.
+	options.cloneUnlessOtherwiseSpecified = cloneUnlessOtherwiseSpecified;
+
+	var sourceIsArray = Array.isArray(source);
+	var targetIsArray = Array.isArray(target);
+	var sourceAndTargetTypesMatch = sourceIsArray === targetIsArray;
+
+	if (!sourceAndTargetTypesMatch) {
+		return cloneUnlessOtherwiseSpecified(source, options)
+	} else if (sourceIsArray) {
+		return options.arrayMerge(target, source, options)
+	} else {
+		return mergeObject(target, source, options)
+	}
+}
+
+deepmerge.all = function deepmergeAll(array, options) {
+	if (!Array.isArray(array)) {
+		throw new Error('first argument should be an array')
+	}
+
+	return array.reduce(function(prev, next) {
+		return deepmerge(prev, next, options)
+	}, {})
+};
+
+var deepmerge_1 = deepmerge;
+
+module.exports = deepmerge_1;
+
 
 /***/ }),
 
