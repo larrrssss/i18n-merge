@@ -87,7 +87,7 @@ export const loadOutputFile = async (basePath: string): Promise<{} | null> => {
     content = JSON.parse(content);
   } catch (e) {
     core.setFailed(
-      `${OUTPUT_FILE_PATH} is malformed. Make sure your output file contains valid json`,
+      `${p} is malformed. Make sure your output file contains valid json`,
     );
     return null;
   }
