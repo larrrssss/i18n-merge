@@ -56,7 +56,7 @@ export const reduceFilesToObject = async (paths: string[], root: string) => {
         .pop()
         ?.split('/')
         .filter((s) => s.length)
-        .map(removeExtension) ?? [];
+        .map((s) => s.split('.')[0]) ?? [];
     const content = JSON.parse(await readPathOrThrow(filePath));
 
     if (!tree.length) continue;
