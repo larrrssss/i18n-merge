@@ -26,7 +26,7 @@ jobs:
           ref: main
 
       - name: Merge Locale Files
-        uses: larrrssss/i18n-merge@v0.1.7
+        uses: larrrssss/i18n-merge@v1.0.0
         id: merge
         with:
           workspace: ${{ github.workspace }}
@@ -39,11 +39,12 @@ jobs:
       - name: Push Output File
         if: ${{ steps.merge.outputs.changes_detected == '1' }}
         env:
-          CI_COMMIT_MESSAGE: Continuous Integration Build Artifacts
+          CI_COMMIT_MESSAGE: Continuous Integration I18n Translation Merge
           CI_COMMIT_AUTHOR: Continuous Integration
         run: |
           git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
           git config --global user.email "username@users.noreply.github.com"
+          git add .
           git commit -a -m "${{ env.CI_COMMIT_MESSAGE }}"
           git push
 ```
