@@ -212,14 +212,13 @@ const getPathsRecursively = (p, root = true) => __awaiter(void 0, void 0, void 0
 });
 exports.getPathsRecursively = getPathsRecursively;
 const reduceFilesToObject = (paths, root) => __awaiter(void 0, void 0, void 0, function* () {
+    var _b, _c;
     let output = {};
     const { BASE_FILE_NAME } = (0, inputs_1.default)();
     for (const filePath of paths) {
-        const tree = filePath
-            .split(root)[1]
-            .split('/')
-            .filter((s) => s.length)
-            .map(exports.removeExtension);
+        const tree = (_c = (_b = filePath
+            .split(root)
+            .pop()) === null || _b === void 0 ? void 0 : _b.split('/').filter((s) => s.length).map(exports.removeExtension)) !== null && _c !== void 0 ? _c : [];
         const content = JSON.parse(yield (0, exports.readPathOrThrow)(filePath));
         if (!tree.length)
             continue;
@@ -245,7 +244,7 @@ const loadOutputFile = (basePath) => __awaiter(void 0, void 0, void 0, function*
         content = JSON.parse(content);
     }
     catch (e) {
-        core.setFailed(`${OUTPUT_FILE_PATH} is malformed. Make sure your output file contains valid json`);
+        core.setFailed(`${p} is malformed. Make sure your output file contains valid json`);
         return null;
     }
     return content;
