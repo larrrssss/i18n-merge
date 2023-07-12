@@ -107,15 +107,16 @@ const utils_1 = __nccwpck_require__(918);
             locales.filter((l) => typeof l !== 'string').length)
             throw new Error(`${LOCALES_FILE_PATH} should be an array of strings`);
         for (const locale of locales) {
-            console.log(`Merging ${locale}`);
+            core.info(`Merging ${locale}`);
             const paths = yield (0, utils_1.getPathsRecursively)(path_1.default.join(workspace, locale));
             const output = yield (0, utils_1.reduceFilesToObject)(paths, path_1.default.join(workspace, locale));
-            const lastOutput = (0, utils_1.loadOutputFile)(path_1.default.join(workspace, locale));
+            const lastOutput = yield (0, utils_1.loadOutputFile)(path_1.default.join(workspace, locale));
             // Check if there is a diff between the old output file and the new one
             if (!lastOutput || JSON.stringify(lastOutput) !== JSON.stringify(output))
                 changesDetected = true;
             yield fs_1.default.promises.writeFile(path_1.default.join(workspace, locale, OUTPUT_FILE_PATH), JSON.stringify(output, null, 2));
         }
+        core.info(`changes_detected: ${changesDetected ? '1' : '0'}`);
         core.setOutput('changes_detected', changesDetected ? '1' : '0');
     }
     catch (error) {
@@ -132,6 +133,29 @@ const utils_1 = __nccwpck_require__(918);
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -149,6 +173,7 @@ exports.loadOutputFile = exports.reduceFilesToObject = exports.getPathsRecursive
 const fs_1 = __importDefault(__nccwpck_require__(147));
 const path_1 = __importDefault(__nccwpck_require__(17));
 const deepmerge_1 = __importDefault(__nccwpck_require__(323));
+const core = __importStar(__nccwpck_require__(186));
 const inputs_1 = __importDefault(__nccwpck_require__(180));
 const removeExtension = (n) => n.split('.').slice(0, -1).join('.');
 exports.removeExtension = removeExtension;
@@ -171,7 +196,7 @@ const getPathsRecursively = (p, root = true) => __awaiter(void 0, void 0, void 0
             if (root && f === OUTPUT_FILE_PATH.split('/').pop())
                 continue;
             if (['json'].includes((0, exports.removeExtension)(f))) {
-                console.log(`Found file ${f}`);
+                core.info(`Found file ${f}`);
                 paths.push(path_1.default.join(p, f));
             }
             else {
