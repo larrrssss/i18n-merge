@@ -50,11 +50,13 @@ export const reduceFilesToObject = async (paths: string[], root: string) => {
   const { BASE_FILE_NAME } = loadInputs();
 
   for (const filePath of paths) {
-    const tree = filePath
-      .split(root)[1]
-      .split('/')
-      .filter((s) => s.length)
-      .map(removeExtension);
+    const tree =
+      filePath
+        .split(root)
+        .pop()
+        ?.split('/')
+        .filter((s) => s.length)
+        .map(removeExtension) ?? [];
     const content = JSON.parse(await readPathOrThrow(filePath));
 
     if (!tree.length) continue;
