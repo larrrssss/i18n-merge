@@ -188,6 +188,7 @@ const readPathOrThrow = (p) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.readPathOrThrow = readPathOrThrow;
 const getPathsRecursively = (p, root = true) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     const paths = [];
     const { OUTPUT_FILE_PATH } = (0, inputs_1.default)();
     try {
@@ -195,7 +196,7 @@ const getPathsRecursively = (p, root = true) => __awaiter(void 0, void 0, void 0
         for (const f of result) {
             if (root && f === OUTPUT_FILE_PATH.split('/').pop())
                 continue;
-            if (['json'].includes((0, exports.removeExtension)(f))) {
+            if (['json'].includes((_a = f.split('.').pop()) !== null && _a !== void 0 ? _a : '')) {
                 core.info(`Found file ${f}`);
                 paths.push(path_1.default.join(p, f));
             }

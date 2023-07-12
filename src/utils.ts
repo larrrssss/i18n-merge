@@ -31,7 +31,7 @@ export const getPathsRecursively = async (
     for (const f of result) {
       if (root && f === OUTPUT_FILE_PATH.split('/').pop()) continue;
 
-      if (['json'].includes(removeExtension(f))) {
+      if (['json'].includes(f.split('.').pop() ?? '')) {
         core.info(`Found file ${f}`);
         paths.push(path.join(p, f));
       } else {
