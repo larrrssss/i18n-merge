@@ -218,7 +218,7 @@ const reduceFilesToObject = (paths, root) => __awaiter(void 0, void 0, void 0, f
     for (const filePath of paths) {
         const tree = (_c = (_b = filePath
             .split(root)
-            .pop()) === null || _b === void 0 ? void 0 : _b.split('/').filter((s) => s.length).map(exports.removeExtension)) !== null && _c !== void 0 ? _c : [];
+            .pop()) === null || _b === void 0 ? void 0 : _b.split('/').filter((s) => s.length).map((s) => s.split('.')[0])) !== null && _c !== void 0 ? _c : [];
         const content = JSON.parse(yield (0, exports.readPathOrThrow)(filePath));
         if (!tree.length)
             continue;
