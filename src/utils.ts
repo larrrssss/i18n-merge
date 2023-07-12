@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import deepmerge from 'deepmerge';
+import * as core from '@actions/core';
 
 import loadInputs from './inputs';
 
@@ -31,7 +32,7 @@ export const getPathsRecursively = async (
       if (root && f === OUTPUT_FILE_PATH.split('/').pop()) continue;
 
       if (['json'].includes(removeExtension(f))) {
-        console.log(`Found file ${f}`);
+        core.info(`Found file ${f}`);
         paths.push(path.join(p, f));
       } else {
         paths.push(...(await getPathsRecursively(path.join(p, f), false)));

@@ -35,7 +35,7 @@ import {
       throw new Error(`${LOCALES_FILE_PATH} should be an array of strings`);
 
     for (const locale of locales) {
-      console.log(`Merging ${locale}`);
+      core.info(`Merging ${locale}`);
 
       const paths = await getPathsRecursively(path.join(workspace, locale));
       const output = await reduceFilesToObject(
@@ -43,7 +43,7 @@ import {
         path.join(workspace, locale),
       );
 
-      const lastOutput = loadOutputFile(path.join(workspace, locale));
+      const lastOutput = await loadOutputFile(path.join(workspace, locale));
 
       // Check if there is a diff between the old output file and the new one
       if (!lastOutput || JSON.stringify(lastOutput) !== JSON.stringify(output))
@@ -55,6 +55,7 @@ import {
       );
     }
 
+    core.info(`changes_detected: ${changesDetected ? '1' : '0'}`);
     core.setOutput('changes_detected', changesDetected ? '1' : '0');
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message);
