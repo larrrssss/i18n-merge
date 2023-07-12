@@ -238,8 +238,17 @@ exports.reduceFilesToObject = reduceFilesToObject;
 const loadOutputFile = (basePath) => __awaiter(void 0, void 0, void 0, function* () {
     const { OUTPUT_FILE_PATH } = (0, inputs_1.default)();
     const p = path_1.default.join(basePath, OUTPUT_FILE_PATH);
-    const content = yield (0, exports.readPathOrThrow)(p).catch(() => null);
-    return !!content ? JSON.parse(content).catch(() => null) : null;
+    let content = yield (0, exports.readPathOrThrow)(p).catch(() => null);
+    if (!content)
+        return null;
+    try {
+        content = JSON.parse(content);
+    }
+    catch (e) {
+        core.setFailed(`${OUTPUT_FILE_PATH} is malformed. Make sure your output file contains valid json`);
+        return null;
+    }
+    return content;
 });
 exports.loadOutputFile = loadOutputFile;
 

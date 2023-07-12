@@ -79,7 +79,18 @@ export const reduceFilesToObject = async (paths: string[], root: string) => {
 export const loadOutputFile = async (basePath: string): Promise<{} | null> => {
   const { OUTPUT_FILE_PATH } = loadInputs();
   const p = path.join(basePath, OUTPUT_FILE_PATH);
-  const content = await readPathOrThrow(p).catch(() => null);
+  let content = await readPathOrThrow(p).catch(() => null);
 
-  return !!content ? JSON.parse(content).catch(() => null) : null;
+  if (!content) return null;
+
+  try {
+    content = JSON.parse(content);
+  } catch (e) {
+    core.setFailed(
+      `${OUTPUT_FILE_PATH} is malformed. Make sure your output file contains valid json`,
+    );
+    return null;
+  }
+
+  return content;
 };
