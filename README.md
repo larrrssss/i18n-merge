@@ -51,6 +51,12 @@ jobs:
 
 Note that the `username` in `username@users.noreply.github.com` needs to be replaced.
 
+### Workflow Permissions
+
+This workflow requires read and write permissions for the repository. Enable read and write permissions following `Settings` → `Actions` → `General`
+
+![/docs/workflow_permissions.png](Workflow Permissions)
+
 ## Inputs
 
 | Name                 | Description                         | Required | Default         |
