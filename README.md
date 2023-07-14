@@ -55,7 +55,7 @@ Note that the `username` in `username@users.noreply.github.com` needs to be repl
 
 This workflow requires read and write permissions for the repository. Enable read and write permissions following `Settings` → `Actions` → `General`
 
-![/docs/workflow_permissions.png](Workflow Permissions)
+![Workflow Permissions](/docs/workflow_permissions.png)
 
 ## Inputs
 
