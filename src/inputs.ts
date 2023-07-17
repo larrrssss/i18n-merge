@@ -5,6 +5,7 @@ const inputs = {
   OUTPUT_FILE_PATH: 'output.json',
   LOCALES_FILE_PATH: 'locales.json',
   BASE_FILE_NAME: 'base.json',
+  EXCLUDE: null,
 };
 
 const loadInputs = () =>

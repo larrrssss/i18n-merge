@@ -66,6 +66,7 @@ This workflow requires read and write permissions for the repository. Enable rea
 | `output_file_path`   | Path for the output file            | &cross;  | `output.json`   |
 | `locales_file_path`  | Path for the root locales file      | &cross;  | `locales.json`  |
 | `base_file_name`     | Name of the base file               | &cross;  | `base.json`     |
+| `exclude`            | Define a glob pattern to exclude paths from merging. This is based on the `root` path. | &cross; |  |
 
 ## Outputs
 

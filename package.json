@@ -26,9 +26,11 @@
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.10.0",
-    "deepmerge": "^4.3.1"
+    "deepmerge": "^4.3.1",
+    "glob-to-regexp": "^0.4.1"
   },
   "devDependencies": {
+    "@types/glob-to-regexp": "^0.4.1",
     "@types/node": "^20.4.2",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
