@@ -4,7 +4,7 @@ import fs from 'fs';
 
 import loadInputs from './inputs';
 import {
-  checkPathsAgainstGlob,
+  filterPaths,
   getPathsRecursively,
   loadOutputFile,
   readPathOrThrow,
@@ -13,7 +13,7 @@ import {
 
 (async () => {
   try {
-    const { LOCALES_FILE_PATH, OUTPUT_FILE_PATH, ROOT, EXCLUDE } = loadInputs();
+    const { LOCALES_FILE_PATH, OUTPUT_FILE_PATH, ROOT } = loadInputs();
     const workspace = path.join(
       // Path from actions/checkout@v3
       core.getInput('workspace', {
@@ -40,9 +40,7 @@ import {
 
       const paths = await getPathsRecursively(path.join(workspace, locale));
       const output = await reduceFilesToObject(
-        !!EXCLUDE
-          ? checkPathsAgainstGlob(paths, path.join(workspace, locale, EXCLUDE))
-          : paths,
+        filterPaths(paths, path.join(workspace, locale)),
         path.join(workspace, locale),
       );
 

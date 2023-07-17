@@ -98,7 +98,13 @@ export const loadOutputFile = async (basePath: string): Promise<{} | null> => {
   return content;
 };
 
-export const checkPathsAgainstGlob = (paths: string[], glob: string) => {
-  const regex = globToRegExp(glob, { globstar: true });
-  return paths.filter((p) => regex.test(p));
+export const filterPaths = (paths: string[], prefix: string) => {
+  const { EXCLUDE } = loadInputs();
+
+  if (!EXCLUDE) return paths;
+
+  const excludeRegex = globToRegExp(path.join(prefix, EXCLUDE), {
+    globstar: true,
+  });
+  return paths.filter((p) => !excludeRegex.test(p));
 };

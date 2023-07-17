@@ -94,7 +94,7 @@ const inputs_1 = __importDefault(__nccwpck_require__(180));
 const utils_1 = __nccwpck_require__(918);
 (() => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { LOCALES_FILE_PATH, OUTPUT_FILE_PATH, ROOT, EXCLUDE } = (0, inputs_1.default)();
+        const { LOCALES_FILE_PATH, OUTPUT_FILE_PATH, ROOT } = (0, inputs_1.default)();
         const workspace = path_1.default.join(
         // Path from actions/checkout@v3
         core.getInput('workspace', {
@@ -110,9 +110,7 @@ const utils_1 = __nccwpck_require__(918);
         for (const locale of locales) {
             core.info(`Merging ${locale}`);
             const paths = yield (0, utils_1.getPathsRecursively)(path_1.default.join(workspace, locale));
-            const output = yield (0, utils_1.reduceFilesToObject)(!!EXCLUDE
-                ? (0, utils_1.checkPathsAgainstGlob)(paths, path_1.default.join(workspace, locale, EXCLUDE))
-                : paths, path_1.default.join(workspace, locale));
+            const output = yield (0, utils_1.reduceFilesToObject)((0, utils_1.filterPaths)(paths, path_1.default.join(workspace, locale)), path_1.default.join(workspace, locale));
             const lastOutput = yield (0, utils_1.loadOutputFile)(path_1.default.join(workspace, locale));
             // Check if there is a diff between the old output file and the new one
             if (!lastOutput || JSON.stringify(lastOutput) !== JSON.stringify(output))
@@ -172,7 +170,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.checkPathsAgainstGlob = exports.loadOutputFile = exports.reduceFilesToObject = exports.getPathsRecursively = exports.readPathOrThrow = exports.removeExtension = void 0;
+exports.filterPaths = exports.loadOutputFile = exports.reduceFilesToObject = exports.getPathsRecursively = exports.readPathOrThrow = exports.removeExtension = void 0;
 const fs_1 = __importDefault(__nccwpck_require__(147));
 const path_1 = __importDefault(__nccwpck_require__(17));
 const deepmerge_1 = __importDefault(__nccwpck_require__(323));
@@ -254,11 +252,16 @@ const loadOutputFile = (basePath) => __awaiter(void 0, void 0, void 0, function*
     return content;
 });
 exports.loadOutputFile = loadOutputFile;
-const checkPathsAgainstGlob = (paths, glob) => {
-    const regex = (0, glob_to_regexp_1.default)(glob, { globstar: true });
-    return paths.filter((p) => regex.test(p));
+const filterPaths = (paths, prefix) => {
+    const { EXCLUDE } = (0, inputs_1.default)();
+    if (!EXCLUDE)
+        return paths;
+    const excludeRegex = (0, glob_to_regexp_1.default)(path_1.default.join(prefix, EXCLUDE), {
+        globstar: true,
+    });
+    return paths.filter((p) => !excludeRegex.test(p));
 };
-exports.checkPathsAgainstGlob = checkPathsAgainstGlob;
+exports.filterPaths = filterPaths;
 
 
 /***/ }),
