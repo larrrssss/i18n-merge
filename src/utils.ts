@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import deepmerge from 'deepmerge';
+import globToRegExp from 'glob-to-regexp';
 import * as core from '@actions/core';
 
 import loadInputs from './inputs';
@@ -95,4 +96,11 @@ export const loadOutputFile = async (basePath: string): Promise<{} | null> => {
   }
 
   return content;
+};
+
+export const checkPathsAgainstGlob = (paths: string[], glob: string) => {
+  const { ROOT } = loadInputs();
+
+  const regex = globToRegExp(path.join(ROOT, glob), { globstar: true });
+  return paths.filter((p) => regex.test(p));
 };
