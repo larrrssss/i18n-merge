@@ -36,6 +36,7 @@ const inputs = {
     OUTPUT_FILE_PATH: 'output.json',
     LOCALES_FILE_PATH: 'locales.json',
     BASE_FILE_NAME: 'base.json',
+    EXCLUDE: null,
 };
 const loadInputs = () => Object.keys(inputs).reduce((p, c) => Object.assign(p, {
     [c]: core.getInput(c.toLowerCase()) || inputs[c],
@@ -93,7 +94,7 @@ const inputs_1 = __importDefault(__nccwpck_require__(180));
 const utils_1 = __nccwpck_require__(918);
 (() => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { LOCALES_FILE_PATH, OUTPUT_FILE_PATH, ROOT } = (0, inputs_1.default)();
+        const { LOCALES_FILE_PATH, OUTPUT_FILE_PATH, ROOT, EXCLUDE } = (0, inputs_1.default)();
         const workspace = path_1.default.join(
         // Path from actions/checkout@v3
         core.getInput('workspace', {
@@ -109,7 +110,7 @@ const utils_1 = __nccwpck_require__(918);
         for (const locale of locales) {
             core.info(`Merging ${locale}`);
             const paths = yield (0, utils_1.getPathsRecursively)(path_1.default.join(workspace, locale));
-            const output = yield (0, utils_1.reduceFilesToObject)(paths, path_1.default.join(workspace, locale));
+            const output = yield (0, utils_1.reduceFilesToObject)(!!EXCLUDE ? (0, utils_1.checkPathsAgainstGlob)(paths, EXCLUDE) : paths, path_1.default.join(workspace, locale));
             const lastOutput = yield (0, utils_1.loadOutputFile)(path_1.default.join(workspace, locale));
             // Check if there is a diff between the old output file and the new one
             if (!lastOutput || JSON.stringify(lastOutput) !== JSON.stringify(output))
@@ -169,10 +170,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.loadOutputFile = exports.reduceFilesToObject = exports.getPathsRecursively = exports.readPathOrThrow = exports.removeExtension = void 0;
+exports.checkPathsAgainstGlob = exports.loadOutputFile = exports.reduceFilesToObject = exports.getPathsRecursively = exports.readPathOrThrow = exports.removeExtension = void 0;
 const fs_1 = __importDefault(__nccwpck_require__(147));
 const path_1 = __importDefault(__nccwpck_require__(17));
 const deepmerge_1 = __importDefault(__nccwpck_require__(323));
+const glob_to_regexp_1 = __importDefault(__nccwpck_require__(117));
 const core = __importStar(__nccwpck_require__(186));
 const inputs_1 = __importDefault(__nccwpck_require__(180));
 const removeExtension = (n) => n.split('.').slice(0, -1).join('.');
@@ -250,6 +252,11 @@ const loadOutputFile = (basePath) => __awaiter(void 0, void 0, void 0, function*
     return content;
 });
 exports.loadOutputFile = loadOutputFile;
+const checkPathsAgainstGlob = (paths, glob) => {
+    const regex = (0, glob_to_regexp_1.default)(glob, { globstar: true });
+    return paths.filter((p) => regex.test(p));
+};
+exports.checkPathsAgainstGlob = checkPathsAgainstGlob;
 
 
 /***/ }),
@@ -2167,6 +2174,143 @@ deepmerge.all = function deepmergeAll(array, options) {
 var deepmerge_1 = deepmerge;
 
 module.exports = deepmerge_1;
+
+
+/***/ }),
+
+/***/ 117:
+/***/ ((module) => {
+
+module.exports = function (glob, opts) {
+  if (typeof glob !== 'string') {
+    throw new TypeError('Expected a string');
+  }
+
+  var str = String(glob);
+
+  // The regexp we are building, as a string.
+  var reStr = "";
+
+  // Whether we are matching so called "extended" globs (like bash) and should
+  // support single character matching, matching ranges of characters, group
+  // matching, etc.
+  var extended = opts ? !!opts.extended : false;
+
+  // When globstar is _false_ (default), '/foo/*' is translated a regexp like
+  // '^\/foo\/.*$' which will match any string beginning with '/foo/'
+  // When globstar is _true_, '/foo/*' is translated to regexp like
+  // '^\/foo\/[^/]*$' which will match any string beginning with '/foo/' BUT
+  // which does not have a '/' to the right of it.
+  // E.g. with '/foo/*' these will match: '/foo/bar', '/foo/bar.txt' but
+  // these will not '/foo/bar/baz', '/foo/bar/baz.txt'
+  // Lastely, when globstar is _true_, '/foo/**' is equivelant to '/foo/*' when
+  // globstar is _false_
+  var globstar = opts ? !!opts.globstar : false;
+
+  // If we are doing extended matching, this boolean is true when we are inside
+  // a group (eg {*.html,*.js}), and false otherwise.
+  var inGroup = false;
+
+  // RegExp flags (eg "i" ) to pass in to RegExp constructor.
+  var flags = opts && typeof( opts.flags ) === "string" ? opts.flags : "";
+
+  var c;
+  for (var i = 0, len = str.length; i < len; i++) {
+    c = str[i];
+
+    switch (c) {
+    case "/":
+    case "$":
+    case "^":
+    case "+":
+    case ".":
+    case "(":
+    case ")":
+    case "=":
+    case "!":
+    case "|":
+      reStr += "\\" + c;
+      break;
+
+    case "?":
+      if (extended) {
+        reStr += ".";
+	    break;
+      }
+
+    case "[":
+    case "]":
+      if (extended) {
+        reStr += c;
+	    break;
+      }
+
+    case "{":
+      if (extended) {
+        inGroup = true;
+	    reStr += "(";
+	    break;
+      }
+
+    case "}":
+      if (extended) {
+        inGroup = false;
+	    reStr += ")";
+	    break;
+      }
+
+    case ",":
+      if (inGroup) {
+        reStr += "|";
+	    break;
+      }
+      reStr += "\\" + c;
+      break;
+
+    case "*":
+      // Move over all consecutive "*"'s.
+      // Also store the previous and next characters
+      var prevChar = str[i - 1];
+      var starCount = 1;
+      while(str[i + 1] === "*") {
+        starCount++;
+        i++;
+      }
+      var nextChar = str[i + 1];
+
+      if (!globstar) {
+        // globstar is disabled, so treat any number of "*" as one
+        reStr += ".*";
+      } else {
+        // globstar is enabled, so determine if this is a globstar segment
+        var isGlobstar = starCount > 1                      // multiple "*"'s
+          && (prevChar === "/" || prevChar === undefined)   // from the start of the segment
+          && (nextChar === "/" || nextChar === undefined)   // to the end of the segment
+
+        if (isGlobstar) {
+          // it's a globstar, so match zero or more path segments
+          reStr += "((?:[^/]*(?:\/|$))*)";
+          i++; // move over the "/"
+        } else {
+          // it's not a globstar, so only match one path segment
+          reStr += "([^/]*)";
+        }
+      }
+      break;
+
+    default:
+      reStr += c;
+    }
+  }
+
+  // When regexp 'g' flag is specified don't
+  // constrain the regular expression with ^ & $
+  if (!flags || !~flags.indexOf('g')) {
+    reStr = "^" + reStr + "$";
+  }
+
+  return new RegExp(reStr, flags);
+};
 
 
 /***/ }),
