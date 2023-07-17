@@ -23,7 +23,7 @@ inputs:
     description: 'Github $GITHUB_WORKSPACE variable'
   exclude:
     required: false
-    description: 'Define a glob pattern to exclude paths from merging. This is based on the `root` path.'
+    description: 'Define a glob pattern to exclude paths from merging. This is based on a specific locale directory.'
 outputs:
   changes_detected:
     description: 'Wheter there are new changes'

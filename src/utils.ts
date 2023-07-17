@@ -99,8 +99,6 @@ export const loadOutputFile = async (basePath: string): Promise<{} | null> => {
 };
 
 export const checkPathsAgainstGlob = (paths: string[], glob: string) => {
-  const { ROOT } = loadInputs();
-
-  const regex = globToRegExp(path.join(ROOT, glob), { globstar: true });
+  const regex = globToRegExp(glob, { globstar: true });
   return paths.filter((p) => regex.test(p));
 };

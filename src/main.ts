@@ -40,7 +40,9 @@ import {
 
       const paths = await getPathsRecursively(path.join(workspace, locale));
       const output = await reduceFilesToObject(
-        !!EXCLUDE ? checkPathsAgainstGlob(paths, EXCLUDE) : paths,
+        !!EXCLUDE
+          ? checkPathsAgainstGlob(paths, path.join(workspace, locale, EXCLUDE))
+          : paths,
         path.join(workspace, locale),
       );
 

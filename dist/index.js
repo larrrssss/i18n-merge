@@ -110,7 +110,9 @@ const utils_1 = __nccwpck_require__(918);
         for (const locale of locales) {
             core.info(`Merging ${locale}`);
             const paths = yield (0, utils_1.getPathsRecursively)(path_1.default.join(workspace, locale));
-            const output = yield (0, utils_1.reduceFilesToObject)(!!EXCLUDE ? (0, utils_1.checkPathsAgainstGlob)(paths, EXCLUDE) : paths, path_1.default.join(workspace, locale));
+            const output = yield (0, utils_1.reduceFilesToObject)(!!EXCLUDE
+                ? (0, utils_1.checkPathsAgainstGlob)(paths, path_1.default.join(workspace, locale, EXCLUDE))
+                : paths, path_1.default.join(workspace, locale));
             const lastOutput = yield (0, utils_1.loadOutputFile)(path_1.default.join(workspace, locale));
             // Check if there is a diff between the old output file and the new one
             if (!lastOutput || JSON.stringify(lastOutput) !== JSON.stringify(output))
@@ -253,8 +255,7 @@ const loadOutputFile = (basePath) => __awaiter(void 0, void 0, void 0, function*
 });
 exports.loadOutputFile = loadOutputFile;
 const checkPathsAgainstGlob = (paths, glob) => {
-    const { ROOT } = (0, inputs_1.default)();
-    const regex = (0, glob_to_regexp_1.default)(path_1.default.join(ROOT, glob), { globstar: true });
+    const regex = (0, glob_to_regexp_1.default)(glob, { globstar: true });
     return paths.filter((p) => regex.test(p));
 };
 exports.checkPathsAgainstGlob = checkPathsAgainstGlob;
