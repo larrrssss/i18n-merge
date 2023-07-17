@@ -253,7 +253,8 @@ const loadOutputFile = (basePath) => __awaiter(void 0, void 0, void 0, function*
 });
 exports.loadOutputFile = loadOutputFile;
 const checkPathsAgainstGlob = (paths, glob) => {
-    const regex = (0, glob_to_regexp_1.default)(glob, { globstar: true });
+    const { ROOT } = (0, inputs_1.default)();
+    const regex = (0, glob_to_regexp_1.default)(path_1.default.join(ROOT, glob), { globstar: true });
     return paths.filter((p) => regex.test(p));
 };
 exports.checkPathsAgainstGlob = checkPathsAgainstGlob;
