@@ -32,7 +32,7 @@
   "devDependencies": {
     "@types/glob-to-regexp": "^0.4.1",
     "@types/node": "^20.5.7",
-    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/eslint-plugin": "^6.8.0",
     "@typescript-eslint/parser": "^5.62.0",
     "@vercel/ncc": "^0.36.1",
     "eslint": "^8.48.0",
